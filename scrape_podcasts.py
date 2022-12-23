@@ -16,6 +16,7 @@ from plotnine import (
     geom_point,
     geom_vline,
     scale_color_brewer,
+    scale_y_discrete,
     theme,
     theme_bw,
     xlab,
@@ -23,7 +24,9 @@ from plotnine import (
 )
 import requests
 
+today = datetime.datetime.now()
 TOP_N = 70
+OUTPUT_FIG = f"podcast_history_{today.year}-{today.month}"
 episodes_url = "https://podcasti.si/api/episodes/?limit=5000&offset=0"
 podcasts_url = "https://podcasti.si/api/podcasts/?limit=1000&offset=0"
 
@@ -84,6 +87,7 @@ eps_top = episodes[[x in top_pods.index for x in episodes["name"]]].copy()
 eps_top["name"] = pd.Categorical(
     values=eps_top["name"], categories=top_pods.index[::-1]
 )
+eps_top.to_csv("podcasts.csv", sep=";")
 
 fig = (
     ggplot(eps_top, mapping=aes("published_datetime", "name", color="is_radio"))
@@ -92,6 +96,7 @@ fig = (
     + xlab("Datum objave")
     + ylab("Ime podkasta")
     + scale_color_brewer(type="qual", palette="Accent", guide=False)
+    + scale_y_discrete()
     + geom_vline(
         data=pd.DataFrame({"datum": [datetime.datetime.now()]}),
         mapping=aes(xintercept="datum"),
@@ -100,4 +105,4 @@ fig = (
     + geom_line(alpha=0.5)
     + geom_point(size=2, shape="|", alpha=0.75)
 )
-ggsave(fig, filename="podcast_history_oct_2022.png", width=15, height=10, dpi=130)
+ggsave(fig, filename=OUTPUT_FIG, width=15, height=10, dpi=130)
